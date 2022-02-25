@@ -22,7 +22,7 @@ Prerequisites
 Configuration
 -------------
 
-Configure the name of the child (as it appears in the subject line of the
+Configure the names of the children (as it appears in the subject line of the
 notification emails from Kindercare) as well as the username and password for
 the KinderCare app / website in the file ``kindercare.yaml``.
 The file ``kindercare.sample.yaml`` contains the necessary structure.
@@ -40,6 +40,6 @@ It only considers notification emails which haven't been checked during past
 invocations.
 To reset that history delete the file ``previously-handled.yaml``.
 
-All media files will be downloaded into a subdirectory ``media``.
+All media files will be downloaded into a subdirectory ``media/CHILD-NAME``.
 For the filename as well as the last accessed and modified time the timestamp
 of the email is being used.

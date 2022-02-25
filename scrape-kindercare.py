@@ -37,7 +37,7 @@ def main():  # noqa: D103
     service = build('gmail', 'v1', credentials=creds)
 
     # login to KinderCare
-    child_name, kindercare_username, kindercare_password = \
+    child_names, kindercare_username, kindercare_password = \
         get_kindercare_info()
     session = login_kindercare(kindercare_username, kindercare_password)
 
@@ -70,11 +70,11 @@ def main():  # noqa: D103
             h.get('value') for h in headers if h.get('name') == 'Subject'][0]
 
         # check if the subject refers to an image/video
-        media_info = get_media_info(subject, child_name)
+        media_info = get_media_info(subject, child_names)
         if not media_info:
             print('.', end='')
         else:
-            media_id, media_type = media_info
+            media_id, media_type, child_name = media_info
 
             # get timestamp of email to use for filename of media
             date_str = [
@@ -113,9 +113,10 @@ def main():  # noqa: D103
                 filename = filename[:-4] + '.mov'
 
             # write media file
-            os.makedirs(MEDIA_DESTINATION, exist_ok=True)
+            child_destination = os.path.join(MEDIA_DESTINATION, child_name)
+            os.makedirs(child_destination, exist_ok=True)
             destination = os.path.join(
-                MEDIA_DESTINATION,
+                child_destination,
                 datetime_local_str + os.path.splitext(filename)[-1])
             assert not os.path.exists(destination)
             with open(destination, 'wb') as f:
@@ -157,7 +158,7 @@ def get_gmail_credentials():  # noqa: D103
 def get_kindercare_info():  # noqa: D103
     with open('kindercare.yaml', 'rb') as h:
         data = yaml.safe_load(h.read())
-    return data['child_name'], data['username'], data['password']
+    return data['child_names'], data['username'], data['password']
 
 
 def login_kindercare(username, password):  # noqa: D103
@@ -206,12 +207,15 @@ def get_message_ids(service, query, page_token):  # noqa: D103
     return results.get('messages', []), results.get('nextPageToken')
 
 
-def get_media_info(subject, child_name):  # noqa: D103
-    # check if an email refers to an image or video
-    pattern = '^' + child_name + r': (\*VIDEO\*)?.+ \[(\d+)\]$'
+def get_media_info(subject, child_names):  # noqa: D103
+    # check if an email refers to an image or video and identify the child name
+    pattern = '^(' + '|'.join(child_names) + r'): (\*VIDEO\*)?.+ \[(\d+)\]$'
     match = re.match(pattern, subject)
-    return (match.group(2), 'video' if match.group(1) else 'image') \
-        if match else None
+    return (
+        match.group(3),
+        'video' if match.group(2) else 'image',
+        match.group(1)
+    ) if match else None
 
 
 if __name__ == '__main__':
