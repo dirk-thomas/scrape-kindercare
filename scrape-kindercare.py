@@ -79,8 +79,12 @@ def main():  # noqa: D103
             # get timestamp of email to use for filename of media
             date_str = [
                 h.get('value') for h in headers if h.get('name') == 'Date'][0]
-            datetime_utc = datetime.datetime.strptime(
-                date_str, '%a, %d %b %Y %X +0000 (UTC)')
+            try:
+                datetime_utc = datetime.datetime.strptime(
+                    date_str, '%a, %d %b %Y %X +0000 (UTC)')
+            except ValueError:
+                datetime_utc = datetime.datetime.strptime(
+                    date_str, '%a, %d %b %Y %X +0000')
             datetime_local = datetime_utc.replace(
                 tzinfo=datetime.timezone.utc).astimezone(tz=None)
             datetime_local_str = datetime_local.strftime('%Y-%m-%d_%H-%M-%S')
